@@ -1,45 +1,75 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="style.css">
-    <title>Task List</title>
-</head>
-<body>
-    <div class="container">
-        <h1>Task List</h1>
-        <form id="task-form">
-            <div class="form-group">
-                <label for="task-title">Task Title</label>
-                <input type="text" id="task-title" class="form-control" required>
-            </div>
-           
-            <div class="form-group">
-                <label for="task-priority">Task Priority</label>
-                <select id="task-priority" class="form-control">
-                    <option value="low">Low Priority</option>
-                    <option value="medium">Medium Priority</option>
-                    <option value="high">High Priority</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Task Status</label>
-                <div class="form-check">
-                    <input type="radio" name="task-status" value="completed" class="form-check-input" id="status-completed">
-                    <label class="form-check-label" for="status-completed">Completed</label>
-                </div>
-                <div class="form-check">
-                    <input type="radio" name="task-status" value="pending" class="form-check-input" id="status-pending" checked>
-                    <label class="form-check-label" for="status-pending">Pending</label>
-                </div>
-            </div>
-            <button type="submit" class="btn btn-primary">Add Task</button>
-        </form>
-        <ul id="task-list" class="list-group mt-3">
-        </ul>
-    </div>
+document.addEventListener("DOMContentLoaded", function () {
+    const taskForm = document.getElementById("task-form");
+    const taskList = document.getElementById("task-list");
+    const tasks = [];
 
-    <script src="script.js"></script>
-</body>
-</html>
+    taskForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const title = document.getElementById("task-title").value;
+        const priority = document.getElementById("task-priority").value;
+        const status = document.querySelector('input[name="task-status"]:checked').value;
+
+        if (title) {
+            const task = {
+                title,
+                priority,
+                status,
+            };
+
+            tasks.push(task);
+            addTaskToDOM(task);
+            taskForm.reset();
+        }
+    });
+
+    function addTaskToDOM(task) {
+        const li = document.createElement("li");
+        li.className = `list-group-item ${task.priority}`;
+        li.innerHTML = `
+            <span class="task-title">${task.title}</span>
+            <span class="task-priority">Priority: ${task.priority}</span>
+            <span class="task-status">Status: ${task.status}</span>
+            <button class="btn btn-danger float-right remove-button">Remove</button>
+            <button class="btn btn-success float-right complete-button">Complete</button>
+        `;
+
+        if (task.status === "completed") {
+            li.style.textDecoration = "line-through";
+        }
+
+        taskList.appendChild(li);
+    }
+
+    taskList.addEventListener("click", function (e) {
+        const taskElement = e.target.closest("li");
+        if (!taskElement) return;
+
+        if (e.target.classList.contains("remove-button")) {
+            removeTask(taskElement);
+        } else if (e.target.classList.contains("complete-button")) {
+            markAsComplete(taskElement);
+        }
+    });
+
+    function removeTask(taskElement) {
+        const taskIndex = Array.from(taskList.children).indexOf(taskElement);
+        taskList.removeChild(taskElement);
+        tasks.splice(taskIndex, 1);
+    }
+
+    function markAsComplete(taskElement) {
+        const taskIndex = Array.from(taskList.children).indexOf(taskElement);
+        const task = tasks[taskIndex];
+
+        if (task.status === "completed") {
+            task.status = "pending";
+            taskElement.querySelector(".task-status").textContent = "Status: pending";
+            taskElement.style.textDecoration = "none";
+        } else {
+            task.status = "completed";
+            taskElement.querySelector(".task-status").textContent = "Status: completed";
+            taskElement.style.textDecoration = "line-through";
+        }
+    }
+});
